@@ -9,6 +9,14 @@ interface RoomItem {
   quantity: number;
 }
 
+interface AddonItem {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  quantity: number;
+}
+
 const INITIAL_ROOMS: RoomItem[] = [
   {
     id: 'auditorium',
@@ -52,11 +60,50 @@ const INITIAL_ROOMS: RoomItem[] = [
   },
 ];
 
+const INITIAL_ADDONS: AddonItem[] = [
+  {
+    id: 'speakers',
+    name: 'Speakers',
+    price: 35,
+    image: 'https://i.pinimg.com/1200x/62/17/78/6217783cee8411d7c9b3d4c5adbee6fc.jpg',
+    quantity: 0,
+  },
+  {
+    id: 'microphones',
+    name: 'Microphones',
+    price: 45,
+    image: 'https://i.pinimg.com/236x/39/e2/16/39e216e0defd4d07ff99e62a0e147121.jpg',
+    quantity: 0,
+  },
+  {
+    id: 'whiteboards',
+    name: 'Whiteboards',
+    price: 80,
+    image: 'https://i.pinimg.com/1200x/cd/8d/45/cd8d45917d05438431840d0c94e0f8e7.jpg',
+    quantity: 0,
+  },
+  {
+    id: 'projectors',
+    name: 'Projectors',
+    price: 200,
+    image: 'https://i.pinimg.com/736x/c4/a8/91/c4a891cc3553576774567a1527f78f68.jpg',
+    quantity: 0,
+  },
+  {
+    id: 'signage',
+    name: 'Signage',
+    price: 80,
+    image: 'https://i.pinimg.com/736x/31/b9/f3/31b9f3a686e8057b99db39d42290b0ac.jpg',
+    quantity: 0,
+  },
+];
+
 export const ProductSelection: React.FC = () => {
   const [rooms, setRooms] = useState<RoomItem[]>(INITIAL_ROOMS);
+  const [addons, setAddons] = useState<AddonItem[]>(INITIAL_ADDONS);
   const [showModal, setShowModal] = useState(false);
 
-  const handleQuantityChange = (id: string, delta: number) => {
+  const handleRoomQuantityChange = (id: string, delta: number) => {
     setRooms((prev) =>
       prev.map((room) =>
         room.id === id
@@ -66,10 +113,27 @@ export const ProductSelection: React.FC = () => {
     );
   };
 
+  const handleAddonQuantityChange = (id: string, delta: number) => {
+    setAddons((prev) =>
+      prev.map((addon) =>
+        addon.id === id
+          ? { ...addon, quantity: Math.max(0, addon.quantity + delta) }
+          : addon
+      )
+    );
+  };
+
   const roomsTotalCost = rooms.reduce(
     (sum, room) => sum + room.price * room.quantity,
     0
   );
+
+  const addonsTotalCost = addons.reduce(
+    (sum, addon) => sum + addon.price * addon.quantity,
+    0
+  );
+
+  const grandTotal = roomsTotalCost + addonsTotalCost;
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800">
@@ -101,6 +165,7 @@ export const ProductSelection: React.FC = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-10 space-y-16">
+        {/* Venue Section */}
         <section id="venue" className="scroll-mt-24 space-y-6">
           <div className="bg-[#1e3a5f] text-white text-center py-3 rounded-lg shadow">
             <h2 className="text-2xl font-bold">Venue Room Selection</h2>
@@ -133,7 +198,7 @@ export const ProductSelection: React.FC = () => {
 
                 <div className="px-5 pb-5 flex items-center justify-center gap-4">
                   <button
-                    onClick={() => handleQuantityChange(room.id, -1)}
+                    onClick={() => handleRoomQuantityChange(room.id, -1)}
                     disabled={room.quantity === 0}
                     className="w-9 h-9 rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-40 font-bold text-lg flex items-center justify-center transition-colors"
                   >
@@ -143,7 +208,7 @@ export const ProductSelection: React.FC = () => {
                     {room.quantity}
                   </span>
                   <button
-                    onClick={() => handleQuantityChange(room.id, 1)}
+                    onClick={() => handleRoomQuantityChange(room.id, 1)}
                     className="w-9 h-9 rounded-md bg-[#1e3a5f] hover:bg-[#162b47] text-white font-bold text-lg flex items-center justify-center transition-colors"
                   >
                     +
@@ -155,17 +220,69 @@ export const ProductSelection: React.FC = () => {
 
           <div className="bg-white border border-gray-200 rounded-lg py-3 px-6 text-center shadow-sm max-w-md mx-auto">
             <span className="text-lg font-bold text-gray-800">
-              Total Cost: ${roomsTotalCost.toLocaleString()}
+              Rooms Total Cost: ${roomsTotalCost.toLocaleString()}
             </span>
           </div>
         </section>
 
-        <section id="addons" className="scroll-mt-24">
+        {/* Add-ons Section */}
+        <section id="addons" className="scroll-mt-24 space-y-6">
           <div className="bg-[#1e3a5f] text-white text-center py-3 rounded-lg shadow">
             <h2 className="text-2xl font-bold">Add-ons Selection</h2>
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {addons.map((addon) => (
+              <div
+                key={addon.id}
+                className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 flex flex-col justify-between"
+              >
+                <div>
+                  <img
+                    src={addon.image}
+                    alt={addon.name}
+                    className="w-full h-40 object-cover"
+                  />
+                  <div className="p-4 text-center space-y-2">
+                    <h3 className="text-base font-bold text-gray-900">
+                      {addon.name}
+                    </h3>
+                    <p className="text-lg font-extrabold text-[#1e3a5f]">
+                      ${addon.price.toLocaleString()} 
+                    </p>
+                  </div>
+                </div>
+
+                <div className="px-4 pb-4 flex items-center justify-center gap-3">
+                  <button
+                    onClick={() => handleAddonQuantityChange(addon.id, -1)}
+                    disabled={addon.quantity === 0}
+                    className="w-8 h-8 rounded-md bg-gray-200 hover:bg-gray-300 disabled:opacity-40 font-bold text-base flex items-center justify-center transition-colors"
+                  >
+                    -
+                  </button>
+                  <span className="w-6 text-center font-semibold text-base">
+                    {addon.quantity}
+                  </span>
+                  <button
+                    onClick={() => handleAddonQuantityChange(addon.id, 1)}
+                    className="w-8 h-8 rounded-md bg-[#1e3a5f] hover:bg-[#162b47] text-white font-bold text-base flex items-center justify-center transition-colors"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-lg py-3 px-6 text-center shadow-sm max-w-md mx-auto">
+            <span className="text-lg font-bold text-gray-800">
+              Add-ons Total Cost: ${addonsTotalCost.toLocaleString()}
+            </span>
+          </div>
         </section>
 
+        {/* Meals Section */}
         <section id="meals" className="scroll-mt-24">
           <div className="bg-[#1e3a5f] text-white text-center py-3 rounded-lg shadow">
             <h2 className="text-2xl font-bold">Meals Selection</h2>
@@ -173,9 +290,10 @@ export const ProductSelection: React.FC = () => {
         </section>
       </main>
 
+      {/* Summary Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-2xl w-full p-6 shadow-2xl space-y-6">
+          <div className="bg-white rounded-xl max-w-2xl w-full p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b pb-3">
               <h3 className="text-xl font-bold text-gray-900">
                 TOTAL COST FOR THE EVENT
@@ -189,7 +307,7 @@ export const ProductSelection: React.FC = () => {
             </div>
 
             <div className="text-center text-3xl font-extrabold text-[#1e3a5f]">
-              ${roomsTotalCost.toLocaleString()}
+              ${grandTotal.toLocaleString()}
             </div>
 
             <div className="overflow-x-auto">
@@ -203,6 +321,7 @@ export const ProductSelection: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y text-sm">
+                  {/* Rooms */}
                   {rooms
                     .filter((r) => r.quantity > 0)
                     .map((room) => (
@@ -217,13 +336,29 @@ export const ProductSelection: React.FC = () => {
                         </td>
                       </tr>
                     ))}
-                  {rooms.every((r) => r.quantity === 0) && (
-                    <tr>
-                      <td colSpan={4} className="py-6 text-center text-gray-500">
-                        No items selected yet.
-                      </td>
-                    </tr>
-                  )}
+
+                  {/* Add-ons */}
+                  {addons
+                    .filter((a) => a.quantity > 0)
+                    .map((addon) => (
+                      <tr key={addon.id}>
+                        <td className="py-3 px-4 font-medium">{addon.name}</td>
+                        <td className="py-3 px-4">${addon.price.toLocaleString()}</td>
+                        <td className="py-3 px-4">{addon.quantity}</td>
+                        <td className="py-3 px-4 font-semibold">
+                          ${(addon.price * addon.quantity).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+
+                  {rooms.every((r) => r.quantity === 0) &&
+                    addons.every((a) => a.quantity === 0) && (
+                      <tr>
+                        <td colSpan={4} className="py-6 text-center text-gray-500">
+                          No items selected yet.
+                        </td>
+                      </tr>
+                    )}
                 </tbody>
               </table>
             </div>
