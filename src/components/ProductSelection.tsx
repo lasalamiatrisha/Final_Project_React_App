@@ -17,6 +17,13 @@ interface AddonItem {
   quantity: number;
 }
 
+interface MealItem {
+  id: string;
+  name: string;
+  price: number;
+  selected: boolean;
+}
+
 const INITIAL_ROOMS: RoomItem[] = [
   {
     id: 'auditorium',
@@ -98,9 +105,18 @@ const INITIAL_ADDONS: AddonItem[] = [
   },
 ];
 
+const INITIAL_MEALS: MealItem[] = [
+  { id: 'breakfast', name: 'Breakfast', price: 50, selected: false },
+  { id: 'hightea', name: 'High Tea', price: 25, selected: false },
+  { id: 'lunch', name: 'Lunch', price: 65, selected: false },
+  { id: 'dinner', name: 'Dinner', price: 70, selected: false },
+];
+
 export const ProductSelection: React.FC = () => {
   const [rooms, setRooms] = useState<RoomItem[]>(INITIAL_ROOMS);
   const [addons, setAddons] = useState<AddonItem[]>(INITIAL_ADDONS);
+  const [meals, setMeals] = useState<MealItem[]>(INITIAL_MEALS);
+  const [mealPeople, setMealPeople] = useState<number>(0);
   const [showModal, setShowModal] = useState(false);
 
   const handleRoomQuantityChange = (id: string, delta: number) => {
@@ -123,6 +139,14 @@ export const ProductSelection: React.FC = () => {
     );
   };
 
+  const handleMealToggle = (id: string) => {
+    setMeals((prev) =>
+      prev.map((meal) =>
+        meal.id === id ? { ...meal, selected: !meal.selected } : meal
+      )
+    );
+  };
+
   const roomsTotalCost = rooms.reduce(
     (sum, room) => sum + room.price * room.quantity,
     0
@@ -133,7 +157,12 @@ export const ProductSelection: React.FC = () => {
     0
   );
 
-  const grandTotal = roomsTotalCost + addonsTotalCost;
+  const mealsTotalCost = meals.reduce(
+    (sum, meal) => sum + (meal.selected ? meal.price * mealPeople : 0),
+    0
+  );
+
+  const grandTotal = roomsTotalCost + addonsTotalCost + mealsTotalCost;
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-800">
@@ -231,7 +260,7 @@ export const ProductSelection: React.FC = () => {
             <h2 className="text-2xl font-bold">Add-ons Selection</h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             {addons.map((addon) => (
               <div
                 key={addon.id}
@@ -248,7 +277,7 @@ export const ProductSelection: React.FC = () => {
                       {addon.name}
                     </h3>
                     <p className="text-lg font-extrabold text-[#1e3a5f]">
-                      ${addon.price.toLocaleString()} 
+                      ${addon.price.toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -283,9 +312,53 @@ export const ProductSelection: React.FC = () => {
         </section>
 
         {/* Meals Section */}
-        <section id="meals" className="scroll-mt-24">
+        <section id="meals" className="scroll-mt-24 space-y-6">
           <div className="bg-[#1e3a5f] text-white text-center py-3 rounded-lg shadow">
             <h2 className="text-2xl font-bold">Meals Selection</h2>
+          </div>
+
+          <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-md max-w-2xl mx-auto space-y-8">
+            <div className="flex items-center justify-center gap-4">
+              <label htmlFor="meal-people" className="text-lg font-bold text-gray-800">
+                Number of People:
+              </label>
+              <input
+                id="meal-people"
+                type="number"
+                min="0"
+                value={mealPeople}
+                onChange={(e) => setMealPeople(Math.max(0, parseInt(e.target.value) || 0))}
+                className="w-28 px-3 py-2 border border-gray-300 rounded-md text-center text-lg font-bold focus:outline-none focus:ring-2 focus:ring-[#1e3a5f]"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+              {meals.map((meal) => (
+                <div
+                  key={meal.id}
+                  className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
+                >
+                  <label className="flex items-center gap-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={meal.selected}
+                      onChange={() => handleMealToggle(meal.id)}
+                      className="w-5 h-5 text-[#1e3a5f] rounded border-gray-300 focus:ring-[#1e3a5f]"
+                    />
+                    <span className="font-semibold text-gray-900">{meal.name}</span>
+                  </label>
+                  <span className="font-bold text-[#1e3a5f]">
+                    ${meal.price}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t pt-6 text-center">
+              <span className="text-xl font-extrabold text-gray-900">
+                Total Cost: ${mealsTotalCost.toLocaleString()}
+              </span>
+            </div>
           </div>
         </section>
       </main>
@@ -316,7 +389,7 @@ export const ProductSelection: React.FC = () => {
                   <tr className="bg-gray-100 border-b text-sm uppercase text-gray-600">
                     <th className="py-3 px-4">Name</th>
                     <th className="py-3 px-4">Unit Cost</th>
-                    <th className="py-3 px-4">Quantity</th>
+                    <th className="py-3 px-4">Quantity / People</th>
                     <th className="py-3 px-4">Total Cost</th>
                   </tr>
                 </thead>
@@ -351,8 +424,23 @@ export const ProductSelection: React.FC = () => {
                       </tr>
                     ))}
 
+                  {/* Meals */}
+                  {meals
+                    .filter((m) => m.selected && mealPeople > 0)
+                    .map((meal) => (
+                      <tr key={meal.id}>
+                        <td className="py-3 px-4 font-medium">{meal.name} (Meal)</td>
+                        <td className="py-3 px-4">${meal.price} / person</td>
+                        <td className="py-3 px-4">{mealPeople} people</td>
+                        <td className="py-3 px-4 font-semibold">
+                          ${(meal.price * mealPeople).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+
                   {rooms.every((r) => r.quantity === 0) &&
-                    addons.every((a) => a.quantity === 0) && (
+                    addons.every((a) => a.quantity === 0) &&
+                    meals.every((m) => !m.selected || mealPeople === 0) && (
                       <tr>
                         <td colSpan={4} className="py-6 text-center text-gray-500">
                           No items selected yet.
