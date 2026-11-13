@@ -200,7 +200,7 @@ export const ProductSelection: React.FC = () => {
             <h2 className="text-2xl font-bold">Venue Room Selection</h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             {rooms.map((room) => (
               <div
                 key={room.id}
